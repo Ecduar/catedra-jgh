@@ -85,7 +85,7 @@ const App = () => {
             <input 
               type="text" 
               name="tema" 
-              placeholder="Tema de Investigación" 
+              placeholder="Año a Cursar" 
               onChange={handleChange} 
               value={form.tema} 
             />
