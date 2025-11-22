@@ -1,8 +1,8 @@
 /* --- Variables Globales --- */
 :root {
-  --primary-color: #2c3e50;   /* Azul oscuro académico */
-  --accent-color: #d4ac0d;    /* Dorado solemne */
-  --bg-color: #f4f4f9;        /* Blanco humo */
+  --primary-color: #2c3e50;   
+  --accent-color: #d4ac0d;    
+  --bg-color: #f4f4f9;       
   --card-bg: #ffffff;
   --text-color: #333;
   --danger-color: #c0392b;
