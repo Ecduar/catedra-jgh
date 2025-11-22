@@ -1,4 +1,4 @@
-/* --- Variables Globales (CSS Custom Properties) --- */
+/* --- Variables Globales --- */
 :root {
   --primary-color: #2c3e50;   /* Azul oscuro académico */
   --accent-color: #d4ac0d;    /* Dorado solemne */
@@ -87,7 +87,7 @@ button {
 
 .btn-secondary { background-color: #95a5a6; color: white; }
 
-/* --- Lista (Cards) --- */
+/* --- Lista  --- */
 .card-container {
   display: grid;
   gap: 1rem;
@@ -121,7 +121,7 @@ button {
   color: #777;
 }
 
-/* --- RESPONSIVE WEB DESIGN (Media Queries) --- */
+/* --- RESPONSIVE WEB DESIGN --- */
 @media (max-width: 768px) {
   .grid-layout {
     grid-template-columns: 1fr; /* Pasa a una sola columna en móviles */
