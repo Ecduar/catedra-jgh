@@ -1,42 +1,141 @@
-#root {
-  max-width: 1280px;
+/* --- Variables Globales (CSS Custom Properties) --- */
+:root {
+  --primary-color: #2c3e50;   /* Azul oscuro académico */
+  --accent-color: #d4ac0d;    /* Dorado solemne */
+  --bg-color: #f4f4f9;        /* Blanco humo */
+  --card-bg: #ffffff;
+  --text-color: #333;
+  --danger-color: #c0392b;
+}
+
+/* --- Reset Básico --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Header --- */
+.main-header {
   text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid var(--primary-color);
+  padding-bottom: 1rem;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.main-header h1 {
+  color: var(--primary-color);
+  font-size: 2rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* --- Grid Layout (Responsive) --- */
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* 1 parte formulario, 2 partes lista */
+  gap: 2rem;
+  flex: 1;
+}
+
+/* --- Formulario --- */
+.form-section {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  height: fit-content;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn-primary { background-color: var(--primary-color); color: white; flex: 1; }
+.btn-primary:hover { background-color: #1a252f; }
+
+.btn-secondary { background-color: #95a5a6; color: white; }
+
+/* --- Lista (Cards) --- */
+.card-container {
+  display: grid;
+  gap: 1rem;
+}
+
+.student-card {
+  background: var(--card-bg);
+  padding: 1rem;
+  border-left: 5px solid var(--accent-color); /* Detalle estético */
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-actions button {
+  margin-left: 5px;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.btn-edit { background-color: #f39c12; color: white; }
+.btn-delete { background-color: var(--danger-color); color: white; }
+
+/* --- Footer --- */
+.main-footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* --- RESPONSIVE WEB DESIGN (Media Queries) --- */
+@media (max-width: 768px) {
+  .grid-layout {
+    grid-template-columns: 1fr; /* Pasa a una sola columna en móviles */
   }
-  to {
-    transform: rotate(360deg);
+  
+  .student-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  
+  .card-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
