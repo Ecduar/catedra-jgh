@@ -1,106 +1,198 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Definimos un modelo inicial vacío
-const initialForm = { id: null, nombre: '', tema: '', fecha: '' };
+// Constantes para configuraciones y validaciones
+const STORAGE_KEY = 'catedra_jgh_data_v2';
+const INITIAL_FORM = { id: null, nombre: '', tema: '', fecha: '' };
 
+/**
+ * Componente Principal de la Aplicación
+ * Gestiona el ciclo de vida de los datos de estudiantes y la interfaz de usuario.
+ */
 const App = () => {
   // --- ESTADO (State) ---
-  // 1. Cargar datos de localStorage o iniciar con array vacío
-  const [estudiantes, setEstudiantes] = useState(() => {
-    const saved = localStorage.getItem('catedra_jgh_data');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [form, setForm] = useState(initialForm);
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [form, setForm] = useState(INITIAL_FORM);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Estado para manejo de errores en UI (Feedback al usuario)
+  const [errorMsg, setErrorMsg] = useState('');
 
   // --- EFECTOS (Side Effects) ---
-  // 2. Guardar en localStorage cada vez que cambie "estudiantes"
+
+  /**
+   * Efecto de Carga Inicial (Mount)
+   * Intenta recuperar datos de localStorage con manejo de errores robusto.
+   * Si el JSON está corrupto, inicia con un array vacío para no romper la app.
+   */
   useEffect(() => {
-    localStorage.setItem('catedra_jgh_data', JSON.stringify(estudiantes));
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setEstudiantes(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error("Error crítico al leer localStorage:", error);
+      setErrorMsg("Error al cargar datos guardados. Se ha reiniciado la base de datos local.");
+      // Opcional: localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
+  /**
+   * Efecto de Persistencia
+   * Guarda los cambios en localStorage cada vez que 'estudiantes' cambia.
+   */
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(estudiantes));
+    } catch (error) {
+      // Manejo de error por "QuotaExceededError" (Memoria llena)
+      setErrorMsg("Memoria llena. No se pueden guardar más registros.");
+      console.error("Error al guardar en localStorage:", error);
+    }
   }, [estudiantes]);
 
-  // --- MANEJADORES (Handlers) ---
+  // --- LOGICA DE NEGOCIO Y VALIDACIONES ---
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Limpiamos el error visual cuando el usuario empieza a escribir corregido
+    if (errorMsg) setErrorMsg('');
   };
 
-  // C: Create / U: Update
+  /**
+   * Valida los datos del formulario antes de procesar.
+   * @param {Object} data - Objeto con datos del formulario
+   * @returns {string|null} - Retorna mensaje de error o null si es válido.
+   */
+  const validateForm = (data) => {
+    // 1. Campos vacíos
+    if (!data.nombre.trim() || !data.tema.trim() || !data.fecha) {
+      return "Todos los campos son obligatorios.";
+    }
+
+    // 2. Validación de Nombre (Solo letras y espacios - Seguridad/Sanitización)
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(data.nombre)) {
+      return "El nombre solo puede contener letras (evitar números o símbolos).";
+    }
+
+    // 3. Longitud mínima
+    if (data.nombre.length < 3) return "El nombre es muy corto.";
+    if (data.tema.length < 5) return "El tema debe ser descriptivo (mín. 5 letras).";
+
+    // 4. Validación de Fecha (No permitir fechas futuras)
+    const selectedDate = new Date(data.fecha);
+    const today = new Date();
+    // Ajustamos la hora para comparar solo fechas
+    today.setHours(0,0,0,0); 
+    
+    if (selectedDate > today) {
+      return "La fecha de inscripción no puede ser futura.";
+    }
+
+    return null; // Todo correcto
+  };
+
   const handleSubmit = (e) => {
-    e.preventDefault(); // Prevenir recarga del navegador (HTML5 Standard)
+    e.preventDefault();
+    
+    // Paso 1: Validar
+    const validationError = validateForm(form);
+    if (validationError) {
+      setErrorMsg(validationError);
+      return; // Detener ejecución
+    }
 
-    if (!form.nombre || !form.tema) return alert("Complete los datos");
-
+    // Paso 2: Procesar
     if (isEditing) {
-      // Lógica de Actualización
       const newDb = estudiantes.map((el) => (el.id === form.id ? form : el));
       setEstudiantes(newDb);
       setIsEditing(false);
+      setErrorMsg(''); // Éxito: limpiar errores
     } else {
-      // Lógica de Creación
-      form.id = Date.now(); // Generamos un ID único basado en tiempo
-      setEstudiantes([...estudiantes, form]);
+      const newRecord = { ...form, id: Date.now() };
+      setEstudiantes([...estudiantes, newRecord]);
+      setErrorMsg('');
     }
-    setForm(initialForm);
+    setForm(INITIAL_FORM);
   };
 
-  // R: Read (Se hace en el return mapeando el array)
-
-  // D: Delete
   const deleteData = (id) => {
-    let isDelete = window.confirm(`¿Estás seguro de eliminar el registro ${id}?`);
-    if (isDelete) {
-      let newData = estudiantes.filter((el) => el.id !== id);
-      setEstudiantes(newData);
+    // Confirmación nativa (simple pero funcional)
+    if (window.confirm(`¿Eliminar registro permanentemente?`)) {
+      setEstudiantes(estudiantes.filter((el) => el.id !== id));
     }
   };
 
-  // Preparar formulario para editar
   const editData = (data) => {
     setForm(data);
     setIsEditing(true);
+    setErrorMsg('');
   };
 
   return (
     <div className="container">
-      {/* HTML5 Semántico: Header */}
       <header className="main-header">
         <h1>Cátedra Dr. José Gregorio Hernández</h1>
-        <p>Sistema de Gestión Académica y Moral</p>
+        <p>Sistema de Gestión Académica</p>
       </header>
 
       <main className="grid-layout">
-        {/* Sección Formulario */}
         <section className="form-section">
           <h2>{isEditing ? 'Editar Registro' : 'Nueva Inscripción'}</h2>
-          <form onSubmit={handleSubmit}>
-            <input 
-              type="text" 
-              name="nombre" 
-              placeholder="Nombre del Estudiante" 
-              onChange={handleChange} 
-              value={form.nombre} 
-            />
-            <input 
-              type="text" 
-              name="Año" 
-              placeholder="Año a Cursar" 
-              onChange={handleChange} 
-              value={form.tema} 
-            />
-            <input 
-              type="date" 
-              name="fecha" 
-              onChange={handleChange} 
-              value={form.fecha} 
-            />
+          
+          {/* Feedback Visual de Errores */}
+          {errorMsg && <div className="error-alert">⚠️ {errorMsg}</div>}
+
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="input-group">
+              <label htmlFor="nombre">Nombre Completo</label>
+              <input 
+                id="nombre"
+                type="text" 
+                name="nombre" 
+                onChange={handleChange} 
+                value={form.nombre} 
+                maxLength={50} // Seguridad: Evitar buffer overflow visual
+                placeholder="Ej: Juan Pérez"
+              />
+            </div>
+            
+            <div className="input-group">
+              <label htmlFor="tema">Tema de Investigación</label>
+              <input 
+                id="tema"
+                type="text" 
+                name="tema" 
+                onChange={handleChange} 
+                value={form.tema} 
+                maxLength={100} 
+                placeholder="Ej: Ética Médica"
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="fecha">Fecha de Inscripción</label>
+              <input 
+                id="fecha"
+                type="date" 
+                name="fecha" 
+                onChange={handleChange} 
+                value={form.fecha} 
+              />
+            </div>
+
             <div className="btn-group">
               <button type="submit" className="btn-primary">
-                {isEditing ? 'Actualizar' : 'Inscribir'}
+                {isEditing ? 'Actualizar Datos' : 'Registrar Estudiante'}
               </button>
               {isEditing && (
-                <button type="button" onClick={() => {setForm(initialForm); setIsEditing(false)}} className="btn-secondary">
+                <button 
+                  type="button" 
+                  onClick={() => { setForm(INITIAL_FORM); setIsEditing(false); setErrorMsg(''); }} 
+                  className="btn-secondary"
+                >
                   Cancelar
                 </button>
               )}
@@ -108,11 +200,13 @@ const App = () => {
           </form>
         </section>
 
-        {/* Sección Lista de Datos */}
         <section className="data-section">
-          <h2>Estudiantes Inscritos</h2>
+          <h2>Estudiantes Inscritos ({estudiantes.length})</h2>
           {estudiantes.length === 0 ? (
-            <p className="no-data">No hay registros en la base de datos local.</p>
+            <div className="empty-state">
+              <p>No hay registros disponibles.</p>
+              <small>Utilice el formulario para agregar estudiantes.</small>
+            </div>
           ) : (
             <div className="card-container">
               {estudiantes.map((el) => (
@@ -120,11 +214,11 @@ const App = () => {
                   <div className="card-info">
                     <h3>{el.nombre}</h3>
                     <p><strong>Tema:</strong> {el.tema}</p>
-                    <small>Fecha: {el.fecha}</small>
+                    <small>📅 {el.fecha}</small>
                   </div>
                   <div className="card-actions">
-                    <button onClick={() => editData(el)} className="btn-edit">Editar</button>
-                    <button onClick={() => deleteData(el.id)} className="btn-delete">Eliminar</button>
+                    <button onClick={() => editData(el)} className="btn-edit" aria-label="Editar">Editar</button>
+                    <button onClick={() => deleteData(el.id)} className="btn-delete" aria-label="Eliminar">Borrar</button>
                   </div>
                 </article>
               ))}
@@ -133,7 +227,6 @@ const App = () => {
         </section>
       </main>
 
-      {/* HTML5 Semántico: Footer */}
       <footer className="main-footer">
         <p>&copy; 2025 - Proyecto Académico sin fines de lucro.</p>
       </footer>
